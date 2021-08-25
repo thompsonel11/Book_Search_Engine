@@ -5,6 +5,7 @@ const routes = require('./routes');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Implement the Apollo Server and apply it to the Express server as middleware
 const { ApolloServer } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schemas');
 
