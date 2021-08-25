@@ -1,22 +1,26 @@
 const { AuthenticationError } = require('apollo-server-express');
-const { Profile } = require('../models');
+const { User } = require('../models');
 const { signToken } = require('../utils/auth');
 
 const resolvers = {
     // me: which returns user
     Query: {
+        user: async (parent, {args}) => {
+            return User.findOne({args}).populate('SavedBooks')
+        },
+        users: async () => {
+            return User.find({})
+        },
         me: async () => {
             if (context.user) {
-              const userData = ;
-      
-            return userData;
-            },
-    },
+              return User.findOne({_id: context.user._id}).populate('savedBooks');
+            }
+    }},
   
     
     Mutation: {
     // login, addUser, saveBook, removeBook
-    
+
       addUser: async (parent, { username, email, password }) => {
         // First we create the user
         const user = await User.create({ username, email, password });
@@ -48,40 +52,26 @@ const resolvers = {
         // Return an `Auth` object that consists of the signed token and user's information
         return { token, user };
       },
-      addThought: async (parent, { thoughtText, thoughtAuthor }) => {
-        const thought = await Thought.create({ thoughtText, thoughtAuthor });
-  
-        await User.findOneAndUpdate(
-          { username: thoughtAuthor },
-          { $addToSet: { thoughts: thought._id } }
+
+   
+      saveBook: async (parent, args, context) => {
+          if (context.user) {
+            return User.findOneAndUpdate(
+                { _id: context.user._id},
+                {$addToSet: {savedBooks: args}}
         );
-  
-        return thought;
+      }},
+
+      removeBook: async (parent, {bookId}, context) => {
+        if (context.user) {
+            return User.findOneAndUpdate(
+                    { _id: context.user._id },
+                    { $pull: { savedBooks: { bookId} } },
+                    { new: true }
+                    )
+        }
+        
       },
-      addComment: async (parent, { thoughtId, commentText, commentAuthor }) => {
-        return Thought.findOneAndUpdate(
-          { _id: thoughtId },
-          {
-            $addToSet: { comments: { commentText, commentAuthor } },
-          },
-          {
-            new: true,
-            runValidators: true,
-          }
-        );
-      },
-      removeThought: async (parent, { thoughtId }) => {
-        return Thought.findOneAndDelete({ _id: thoughtId });
-      },
-      removeComment: async (parent, { thoughtId, commentId }) => {
-        return Thought.findOneAndUpdate(
-          { _id: thoughtId },
-          { $pull: { comments: { _id: commentId } } },
-          { new: true }
-        );
-      },
-    },
-  };
-  
+  },
+}
   module.exports = resolvers;
-  
