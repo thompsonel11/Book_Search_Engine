@@ -13,8 +13,26 @@ import SearchBooks from './pages/SearchBooks';
 import SavedBooks from './pages/SavedBooks';
 import Navbar from './components/Navbar';
 
+const httpLink = createHttpLink({
+  uri: '/graphql',
+});
+
+const context = setContext((_, {headers}) => {
+  const token = localStorage.getItem('id_token')
+  return {
+    headers: {
+      ...headers, 
+      auth: token ? `Bearer ${token}` : ''
+    }
+  }
+})
+const client = new ApolloClient ({
+  link: context.concat(httpLink),
+  cache: new InMemoryCache()
+})
 function App() {
   return (
+    <ApolloProvider client = {client}>
     <Router>
       <>
         <Navbar />
@@ -25,6 +43,7 @@ function App() {
         </Switch>
       </>
     </Router>
+    </ApolloProvider>
   );
 }
 
