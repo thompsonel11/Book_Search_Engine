@@ -6,7 +6,7 @@ const resolvers = {
     // me: which returns user
     Query: {
         user: async (parent, {args}) => {
-            return User.findOne({args}).populate('SavedBooks')
+            return User.findOne({args}).populate('savedBooks')
         },
         users: async () => {
             return User.find({})
@@ -21,11 +21,14 @@ const resolvers = {
     Mutation: {
     // login, addUser, saveBook, removeBook
 
-      addUser: async (parent, { username, email, password }) => {
+      addUser: async (parent, { username, email, password, error}) => {
         // First we create the user
         const user = await User.create({ username, email, password });
         // To reduce friction for the user, we immediately sign a JSON Web Token and log the user in after they are created
         const token = signToken(user);
+        if (error) {
+          console.log(error.message);
+        }
         // Return an `Auth` object that consists of the signed token and user's information
         return { token, user };
       },
